@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1089729010088",
+    "project_id": "just-armor-330111",
+    "storage_bucket": "just-armor-330111.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089729010088:android:793953f9a5fa36ebd5a59d",
+        "android_client_info": {
+          "package_name": "com.example.firedatabasenote"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1089729010088-3ifulumiect2bihum4pqdutdghb2ni78.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS9eWWmmUKrgxq4Vv3phXZ4RB5PeSgmKY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1089729010088-3ifulumiect2bihum4pqdutdghb2ni78.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
