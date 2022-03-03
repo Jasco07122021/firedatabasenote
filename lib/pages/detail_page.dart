@@ -4,12 +4,17 @@ import 'package:firedatabasenote/models/post_model.dart';
 import 'package:firedatabasenote/services/hive_db.dart';
 import 'package:firedatabasenote/services/rtdb_service.dart';
 import 'package:firedatabasenote/services/store_service.dart';
+import 'package:firedatabasenote/widgets/loading_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 
 class DetailPage extends StatefulWidget {
-  const DetailPage({Key? key}) : super(key: key);
+  PostModel? obj;
+  String? keyObj;
+  int? index;
+
+  DetailPage({Key? key, this.keyObj, this.obj, this.index}) : super(key: key);
   static String id = "/detail_page";
 
   @override
@@ -27,28 +32,44 @@ class _DetailPageState extends State<DetailPage> {
   _addPost() async {
     String title = controllerTitle.text.trim().toString();
     String content = controllerContent.text.trim().toString();
-    if (title.isEmpty || content.isEmpty || _image == null) {
+    if (title.isEmpty || content.isEmpty) {
       return;
     }
     setState(() {
       isLoading = true;
     });
     var id = await HiveDB.getUser();
-    await StoreService.uploadImg(_image!).then((value) => {
-          RTDBServer.putPost(PostModel(
-                  id: id, title: title, content: content, imgUser: value!))
-              .then((value) {
-            setState(() {
-              isLoading = false;
+    _setData(id: id, title: title, content: content);
+  }
+
+  _setData({title, content, id}) async {
+    await StorageService.uploadImg(_image, oldUrl: widget.obj?.imgUser)
+        .then((value) => {
+              widget.obj != null
+                  ? RTDBServer.updatePost(
+                      PostModel(
+                          id: id,
+                          title: title,
+                          content: content,
+                          imgUser: value),
+                      widget.keyObj!,
+                      context)
+                  : RTDBServer.putPost(PostModel(
+                          id: id,
+                          title: title,
+                          content: content,
+                          imgUser: value))
+                      .then((value) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                      Navigator.pop(context);
+                    })
             });
-            Navigator.pop(context);
-          })
-        });
   }
 
   _getPhoto() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile.path);
@@ -56,6 +77,22 @@ class _DetailPageState extends State<DetailPage> {
         Logger().d("No image selected");
       }
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.obj != null) {
+      controllerContent.text = widget.obj!.content;
+      controllerTitle.text = widget.obj!.title;
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controllerTitle.dispose();
+    controllerContent.dispose();
   }
 
   @override
@@ -77,18 +114,25 @@ class _DetailPageState extends State<DetailPage> {
                   child: Container(
                     height: 150,
                     width: 150,
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                        color: Colors.grey.shade800,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.grey, blurRadius: 3)
-                        ]),
+                      color: Colors.grey.shade800,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.grey, blurRadius: 3)
+                      ],
+                    ),
                     child: _image != null
                         ? Image.file(_image!, fit: BoxFit.cover)
-                        : Padding(
-                            padding: const EdgeInsets.all(50.0),
-                            child: Image.asset("assets/images/img.png"),
-                          ),
+                        : widget.obj != null && widget.obj!.imgUser != null
+                            ? Image.network(
+                                widget.obj!.imgUser!,
+                                fit: BoxFit.cover,
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(50.0),
+                                child: Image.asset("assets/images/img.png"),
+                              ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -105,20 +149,17 @@ class _DetailPageState extends State<DetailPage> {
               ],
             ),
           ),
-          isLoading
-              ? const LinearProgressIndicator(
-                  backgroundColor: Colors.red,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.amber,
-                  ),
-                )
-              : const SizedBox.shrink(),
+          LoadingWidgets.loadLinear(load: isLoading),
         ],
       ),
     );
   }
 
   TextField _textField({text, controller}) {
+    setState(() {});
+    if (widget.obj != null) {
+      text = text == "Title" ? widget.obj!.title : widget.obj!.content;
+    }
     return TextField(
       controller: controller,
       decoration: InputDecoration(

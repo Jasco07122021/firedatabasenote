@@ -1,14 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firedatabasenote/pages/detail_page.dart';
-import 'package:firedatabasenote/pages/home_page.dart';
 import 'package:firedatabasenote/pages/login_pages/sign_in_page.dart';
 import 'package:firedatabasenote/pages/login_pages/sign_up_page.dart';
+import 'package:firedatabasenote/pages/home_page.dart';
 import 'package:firedatabasenote/services/hive_db.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,13 +39,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       navigatorObservers: [routeObserver],
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: _checkLogin(),
       routes: {
         SignUpPage.id: (context) => const SignUpPage(),
         SignInPage.id: (context) => const SignInPage(),
         HomePage.id: (context) => const HomePage(),
-        DetailPage.id: (context) => const DetailPage(),
+        DetailPage.id: (context) =>  DetailPage(),
       },
     );
   }

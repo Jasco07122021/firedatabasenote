@@ -26,6 +26,7 @@ dependencies:
   logger: any
   fluttertoast: any
   image_picker: any
+  lottie: any
 
 dev_dependencies:
   flutter_test:
@@ -42,6 +43,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/lottie/
 
   # fonts:
   #   - family: Schyler

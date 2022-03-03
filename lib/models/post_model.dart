@@ -1,16 +1,19 @@
-import 'dart:convert';
+
+
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PostModel {
+  String name = FirebaseAuth.instance.currentUser!.displayName!;
   late String id;
   late String title;
   late String content;
-  late String imgUser;
+  String? imgUser;
 
   PostModel({
     required this.id,
     required this.title,
     required this.content,
-    required this.imgUser,
+    this.imgUser,
   });
 
   PostModel.fromJson(Map<dynamic, dynamic> json)

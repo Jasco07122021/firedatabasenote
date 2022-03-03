@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firedatabasenote/pages/login_pages/sign_in_page.dart';
-import 'package:firedatabasenote/services/hive_db.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
@@ -49,10 +48,7 @@ class AuthService {
   }
 
   static void signOutUser(BuildContext context) async {
-    Logger().d("log out");
-    await _auth.currentUser!.delete().then((value) {
-      HiveDB.removeUser();
-      Navigator.pushReplacementNamed(context, SignInPage.id);
-    });
+    await _auth.signOut().then(
+        (value) => Navigator.pushReplacementNamed(context, SignInPage.id));
   }
 }

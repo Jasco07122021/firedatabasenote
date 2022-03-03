@@ -1,92 +1,116 @@
+import 'dart:math';
+
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firedatabasenote/models/post_model.dart';
-import 'package:firedatabasenote/pages/detail_page.dart';
-import 'package:firedatabasenote/services/auth_service.dart';
-import 'package:firedatabasenote/services/hive_db.dart';
-import 'package:firedatabasenote/services/rtdb_service.dart';
+import 'package:firedatabasenote/services/store_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../main.dart';
+import 'package:logger/logger.dart';
+import 'package:path/path.dart' as Path;
+import '../services/auth_service.dart';
+import 'detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
   static String id = "/home_page";
-
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with RouteAware {
-  late String userId;
-  List<PostModel> list = [];
-
-  _getPost() async {
-    RTDBServer.getPost(userId).then((value) => {_getUIPost(value)});
-  }
-
-  _getUIPost(List<PostModel> posts) {
-    setState(() {
-      list = posts;
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    MyApp.routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void didPopNext() {
-    super.didPopNext();
-    _getPost();
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    userId = HiveDB.getUser();
-    _getPost();
-  }
+class _HomePageState extends State<HomePage> {
+  final databaseRef = FirebaseDatabase.instance.ref().child("post");
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text("Home"),
         actions: [
           IconButton(
-              onPressed: () {
-                AuthService.signOutUser(context);
-              },
-              icon: const Icon(Icons.replay)),
+            onPressed: () {
+              AuthService.signOutUser(context);
+            },
+            icon: const Icon(Icons.replay),
+          ),
           const SizedBox(width: 10),
         ],
       ),
-      body: ListView.builder(
-          itemCount: list.length,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          itemBuilder: (context, index) {
+      body: SafeArea(
+        child: FirebaseAnimatedList(
+          query: databaseRef.orderByChild("id"),
+          defaultChild: const Align(
+            alignment: Alignment.bottomCenter,
+            child: LinearProgressIndicator(
+              backgroundColor: Colors.blue,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.greenAccent,
+              ),
+            ),
+          ),
+          itemBuilder: (BuildContext context, DataSnapshot snapshot,
+              Animation<double> animation, int index) {
+            final json = snapshot.value as Map<dynamic, dynamic>;
+            final  responseKey = snapshot.key;
+            final response = PostModel.fromJson(json);
             return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: ListTile(
-                onTap: (){
-                  Navigator.pushNamed(context, DetailPage.id);
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DetailPage(
+                                obj: response,keyObj: responseKey
+                              )));
                 },
-                textColor: Colors.white,
-                leading: CircleAvatar(
-                  backgroundImage: NetworkImage(list[index].imgUser)
+                leading: response.imgUser == null
+                    ? CircleAvatar(
+                        child: Text(response.name[0]),
+                        backgroundColor: Color(Random().nextInt(0xffffffff)),
+                        foregroundColor: Colors.white,
+                      )
+                    : CircleAvatar(
+                        backgroundImage: NetworkImage(response.imgUser!),
+                      ),
+                title: _text(response: response.title, width: 0.4),
+                subtitle: _text(response: response.content, width: 0.6),
+                trailing: GestureDetector(
+                  onTap: () {
+                    databaseRef.child(responseKey!).remove();
+                    StorageService.deleteStorage(response.imgUser!);
+                  },
+                  child: Icon(
+                    Icons.delete,
+                    color: Colors.red.shade400,
+                  ),
                 ),
-                title: Text(list[index].title),
-                subtitle: Text(list[index].content),
               ),
             );
-          }),
+          },
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, DetailPage.id);
         },
         child: const Icon(CupertinoIcons.plus),
       ),
+    );
+  }
+
+  Widget _text({response, width}) {
+    final size = MediaQuery.of(context).size;
+    return Row(
+      children: [
+        SizedBox(
+          width: size.width * width,
+          child: Text(
+            response,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

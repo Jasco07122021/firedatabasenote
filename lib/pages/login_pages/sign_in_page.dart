@@ -19,6 +19,10 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
+
+  late FocusNode focusNodePassword = FocusNode();
+  late FocusNode focusNodeEmail = FocusNode();
+
   bool _errorShow = false;
 
   _doSignUp() {
@@ -38,6 +42,8 @@ class _SignInPageState extends State<SignInPage> {
         Navigator.pushReplacementNamed(context, HomePage.id);
       }
       else{
+        focusNodePassword.unfocus();
+        focusNodeEmail.unfocus();
         Fluttertoast.showToast(
             msg: "Check your email and password",
             toastLength: Toast.LENGTH_SHORT,
@@ -59,17 +65,27 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   @override
+  void dispose() {
+    controllerEmail.dispose();
+    controllerPassword.dispose();
+    focusNodeEmail.dispose();
+    focusNodePassword.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              textField(text: "Email", controller: controllerEmail),
+              textField(text: "Email", controller: controllerEmail,focusNode: focusNodeEmail),
               const SizedBox(height: 10),
-              textField(text: "Password", controller: controllerPassword),
+              textField(text: "Password", controller: controllerPassword,focusNode: focusNodePassword),
               const SizedBox(height: 10),
               MaterialButton(
                 onPressed: _doSignUp,
@@ -109,8 +125,9 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  TextField textField({text, controller}) {
+  TextField textField({text, controller,focusNode}) {
     return TextField(
+      focusNode: focusNode,
       controller: controller,
       decoration: InputDecoration(
         labelText: text,

@@ -1,11 +1,11 @@
-import 'package:firedatabasenote/pages/home_page.dart';
 import 'package:firedatabasenote/pages/login_pages/sign_in_page.dart';
 import 'package:firedatabasenote/services/auth_service.dart';
 import 'package:firedatabasenote/services/hive_db.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:logger/logger.dart';
+
+import '../home_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -37,7 +37,7 @@ class _SignUpPageState extends State<SignUpPage> {
       });
       return;
     }
-      AuthService.signUpUser(name: "$firstName + $lastName",email: email, password: password).then((value) {
+      AuthService.signUpUser(name: "$firstName $lastName",email: email, password: password).then((value) {
         if (value != null) {
           HiveDB.putUser(value);
           Navigator.pushReplacementNamed(context, HomePage.id);
@@ -77,6 +77,7 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30),
